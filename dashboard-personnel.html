@@ -21,10 +21,26 @@
 
     .app{display:flex;min-height:100vh}
     .sidebar{
-      width:280px;background:var(--green-900);color:white;padding:20px 16px;display:flex;flex-direction:column;gap:20px;transition:width .25s ease;
-      box-shadow:0 6px 18px rgba(3,10,7,0.15)
+      width:280px;
+      background:var(--green-900);
+      color:white;
+      padding:20px 16px;
+      display:flex;
+      flex-direction:column;
+      gap:20px;
+      /* Main Sidebar Layout */
+      position: sticky; top: 0; height: 100vh;
+      z-index: 1000;
+      transition: width .25s ease, transform .3s ease; /* Added transform transition */
+      box-shadow:0 6px 18px rgba(3,10,7,0.15);
     }
-    .brand{display:flex;gap:12px;align-items:center}
+    
+    .brand{
+        display:flex;
+        gap:12px;
+        align-items:center;
+        min-height: 44px; /* Ensure brand section doesn't disappear */
+    }
     .logo{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700}
     .brand h1{font-size:15px;margin:0}
     .brand p{margin:0;font-size:11px;opacity:.92}
@@ -36,46 +52,57 @@
     .nav-item svg{opacity:.95}
 
     .content{flex:1;padding:28px}
-    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px; flex-wrap: wrap;}
+    
+    /* New container for the title and the mobile menu button */
+    .topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
     .title{font-size:18px;font-weight:700}
     .subtitle{color:var(--muted);font-size:13px}
+    
+    /* Right side of the top bar */
+    .topbar .row {
+        flex-direction: column;
+        align-items: flex-end; 
+        gap: 12px;
+    }
 
     .card{background:var(--card);border-radius:var(--radius);box-shadow:0 6px 20px rgba(16,24,40,0.06);}
 
     /* MODERN DIGITAL CLOCK STYLES */
     #realtime-datetime {
       text-align: center;
-      /* Use a monospace-like font for the digital look */
       font-family: 'Inter', 'DSEG7 Classic', monospace; 
-      font-size: 24px; /* Slightly larger for visibility */
+      font-size: 24px; 
       font-weight: 700;
-      color: var(--green-900); /* Use a dark color for contrast */
-      margin-bottom: 20px; /* More space */
-      padding: 10px 15px;
-      background-color: #e2e8f0; /* Light, soft background */
+      color: var(--green-900); 
+      margin-bottom: 0 !important; 
+      padding: 8px 12px;
+      background-color: #e2e8f0; 
       border-radius: 8px;
-      letter-spacing: 1px; /* Spacing for the digital look */
+      letter-spacing: 1px; 
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-      /* New properties to structure the date and time */
       display: flex;
       flex-direction: column;
+      margin-right: 0 !important; 
     }
 
-    /* Style for the time part */
     .time-display {
-        font-size: 38px; /* Prominent time */
+        font-size: 32px; 
         color: var(--green-700); 
         font-weight: 900;
     }
 
-    /* Style for the date and day part */
     .date-display {
-        font-size: 14px;
+        font-size: 13px; 
         font-weight: 600;
         color: var(--muted);
-        margin-top: 4px;
+        margin-top: 2px;
     }
-    /* END MODERN DIGITAL CLOCK STYLES */
     
     .actions{display:flex;gap:10px;justify-content:center;margin-top:8px}
     button{
@@ -87,53 +114,15 @@
         font-weight:600;
         cursor:pointer;
         transition:transform .12s, box-shadow .12s, background-color .12s;
+        white-space: nowrap; 
     }
-    button:hover {
-        background-color: #0c7340;
-        box-shadow: 0 4px 12px rgba(11, 97, 55, 0.2);
-    }
-    button.secondary{
-        background:transparent;
-        color:var(--green-700);
-        border:1px solid rgba(11,97,55,0.12);
-    }
-    button.secondary:hover {
-        background: rgba(11,97,55,0.05);
-        box-shadow: none;
-    }
-    button:active{transform:translateY(1px)}
-
-    /* NEW: Style for the loading state of the sync button */
-    button.loading {
-        pointer-events: none; /* Crucial for preventing double clicks */
-        opacity: 0.7;
-        cursor: wait;
-    }
-
-    /* --- Table Styles for Modernization --- */
+    
+    /* Table Styles */
     #clientListContainer { overflow-x: auto; }
     table{width:100%;border-collapse:collapse;margin-top:12px;min-width: 700px;} 
     thead th{text-align:left;padding:12px 8px;color:var(--muted);font-size:13px;border-bottom:1px solid #eef5f7}
     tbody td{padding:12px 8px;border-bottom:1px solid #fbfcfd; font-size: 14px;}
     
-    /* New Detail Row Style */
-    .detail-row td {
-        background: #fcfdfe;
-        padding: 0;
-        border-bottom: 1px solid #eef5f7;
-    }
-    .detail-content {
-        padding: 12px 18px;
-        font-size: 13px;
-        line-height: 1.6;
-        color: #333;
-    }
-    .detail-content strong { color: var(--green-700); }
-    .detail-row.hidden { display: none; }
-    
-    .muted{color:var(--muted)}
-    .row{display:flex;gap:12px;align-items:center}
-
     /* Search Bar Style */
     #search-input {
       margin-bottom: 15px;
@@ -142,49 +131,114 @@
       border-radius: 8px;
       width: 100%;
       font-size: 14px;
-      text-transform: none; /* Do not force uppercase for searching */
+      text-transform: none; 
     }
 
-    /* Fade-in for page content */
-    .fade-in{animation:fadeIn .28s ease both}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-
-    @media (max-width:900px){
-      .sidebar{width:68px;padding:16px}
-      .brand h1,.brand p{display:none}
-      table{min-width: unset;} /* Allow table to shrink on mobile */
-    }
-
-    /* Splash Screen */
-    #splash-intro {
-      position:fixed;top:0;left:0;width:100%;height:100%;
-      display:flex;flex-direction:column;justify-content:center;align-items:center;
-      background:#08331a;color:white;z-index:9999;transition:opacity 0.5s ease-out;
-    }
-
-    .developed-by {
-      position: fixed;bottom: 1rem;right: 1rem;
-      color: #6b7280;font-size: 11px;opacity: 0.9;text-align:right;
-    }
-
-    /* Style for Pagination Controls */
+    /* Pagination */
     .pagination-controls {
         display:flex; 
         justify-content:center; 
         gap:10px; 
         margin-top:12px;
     }
-    .pagination-controls span {
-        display:flex; 
-        align-items:center; 
-        color:var(--muted); 
-        font-size:14px;
+    
+    /* ======================================= */
+    /* MOBILE OPTIMIZATION MEDIA QUERIES */
+    /* ======================================= */
+    
+    /* Tablet/Compact Desktop (900px to 601px) */
+    @media (max-width: 900px) {
+      /* Collapsed Sidebar */
+      .sidebar{width:68px;padding:16px; position: static; height: auto;}
+      .brand h1,.brand p{display:none}
+      .app { flex-direction: column; } 
     }
-    .pagination-controls button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        box-shadow: none;
-        background: rgba(11,97,55,0.02); /* Very light background for disabled secondary */
+    
+    /* Mobile Phone Portrait (<= 600px) */
+    @media (max-width: 600px) {
+        .content {
+            padding: 15px; 
+        }
+        
+        /* 1. HIDE the sidebar by default and make it an overlay */
+        .sidebar {
+            width: 280px; /* Full width when open */
+            height: 100vh;
+            position: fixed; 
+            top: 0;
+            left: 0;
+            transform: translateX(-100%); /* Hide it off-screen */
+            box-shadow: 6px 0 18px rgba(3, 10, 7, 0.35); /* Shadow on the side */
+            padding: 20px 16px; 
+        }
+        
+        /* 2. SHOW the sidebar when 'open' class is applied */
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        
+        /* 3. Show full brand text when menu is open */
+        .sidebar.open .brand h1, .sidebar.open .brand p {
+            display: block !important;
+        }
+
+        /* 4. Show the mobile menu button */
+        #menu-toggle {
+            display: block !important;
+        }
+        
+        /* 5. Add an overlay when menu is open to dim content */
+        .app.menu-open:after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999; 
+        }
+
+        /* Top Bar: Force stack layout for titles and actions */
+        .topbar {
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .topbar-left {
+            width: 100%;
+            justify-content: flex-start; /* Align menu button and title */
+        }
+        
+        .title {
+            font-size: 16px;
+        }
+
+        /* Time & Sync Button Group */
+        .topbar .row {
+            width: 100%;
+            flex-direction: row; 
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        /* Tables */
+        table{min-width: 450px;}
+        thead th, tbody td {
+            padding: 8px 5px; 
+            font-size: 13px; 
+        }
+        
+        .pagination-controls button {
+            font-size: 13px;
+            padding: 8px 10px;
+        }
+        
+        .developed-by {
+            display: none;
+        }
     }
   </style>
 </head>
@@ -220,12 +274,17 @@
 
     <main class="content">
       <div class="topbar">
-        <div>
-          <div class="title">Digital Client Management Dashboard</div>
-          <div class="subtitle">DENR-CENRO Diffun</div>
+        <div class="topbar-left">
+             <button id="menu-toggle" style="display:none; padding: 8px 10px; background:var(--green-700); border-radius: 8px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 12h18M3 6h18M3 18h18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div>
+              <div class="title">Digital Client Management Dashboard</div>
+              <div class="subtitle">DENR-CENRO Diffun</div>
+            </div>
         </div>
         <div class="row">
-          <div id="realtime-datetime" style="margin-right: 20px; margin-bottom: 0;"></div>
+          <div id="realtime-datetime" style="margin-bottom: 0;"></div>
           <button id="syncBtn" class="secondary">Sync List</button>
         </div>
       </div>
@@ -238,12 +297,40 @@
     </main>
   </div>
 
-  <div class="developed-by">
-    Developed by <br><strong>ALDRIN N. DAMANCE, LPT <br>IT TECHNICAL SUPPORT STAFF</strong>
-  </div>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // --- New Sidebar Toggle Logic ---
+    const menuToggleBtn = document.getElementById('menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const app = document.querySelector('.app');
+
+    const toggleSidebar = () => {
+        const isOpen = sidebar.classList.toggle('open');
+        app.classList.toggle('menu-open');
+        
+        // Change button icon for better UX
+        const icon = menuToggleBtn.querySelector('svg');
+        if (isOpen) {
+            // X icon (close)
+            icon.innerHTML = '<path d="M18 6L6 18M6 6l12 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+        } else {
+            // Burger icon (menu)
+            icon.innerHTML = '<path d="M3 12h18M3 6h18M3 18h18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+        }
+    };
+    
+    menuToggleBtn.addEventListener('click', toggleSidebar);
+    
+    // Close sidebar when a nav item is clicked on mobile
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 600) {
+                setTimeout(toggleSidebar, 100); // Small delay to allow navigation to process
+            }
+        });
+    });
+    // ------------------------------------
+
     // Replace this with your deployed Web App URL
     const GAS_URL = 'https://script.google.com/macros/s/AKfycby4gdcxwVmcfUERW0FDEqiFNu0mcGUXiMONI8uNRhdh44MH5bj8f7UIyUh-zl_vqqSvWw/exec';
     
@@ -319,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `,
             showConfirmButton: false,
-            timer: 10000, // Disappears after 10 seconds
+            timer: 30000, // Disappears after 30 seconds
             timerProgressBar: true
         });
     }
