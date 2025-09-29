@@ -143,6 +143,44 @@
     }
     
     /* ======================================= */
+    /* SPLASH SCREEN STYLES (FIXED) */
+    /* ======================================= */
+    #splash-intro {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg); /* Use the defined background color */
+      z-index: 2000; /* Ensure it's above all other elements */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+      text-align: center;
+    }
+    
+    #splash-intro h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--green-900);
+      margin-bottom: 0;
+    }
+    
+    #splash-intro h3 {
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+    /* Style for hidden splash screen */
+    #splash-intro.hidden {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    /* ======================================= */
     /* MOBILE OPTIMIZATION MEDIA QUERIES */
     /* ======================================= */
     
@@ -363,24 +401,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // Date formatting options (for re-use)
     const dateOptions = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true };
 
-    // --- Audio Alert Function to say official's name twice (FIXED) ---
-    function speakNewClientAlert(section, personnel) {
-        if (!('speechSynthesis' in window)) {
-            console.warn("Speech Synthesis not supported for client alerts.");
-            return;
-        }
+// --- Audio Alert Function to say official's name twice with chime ---
+function speakNewClientAlert(section, personnel) {
+    if (!('speechSynthesis' in window)) {
+        console.warn("Speech Synthesis not supported for client alerts.");
+        return;
+    }
 
-        // 💡 FIX: Cancel any ongoing speech (like the hourly time announcement) to prioritize this alert
-        if (window.speechSynthesis.speaking) {
-            window.speechSynthesis.cancel();
-        }
+    // Cancel ongoing speech (so chime + alert won't overlap incorrectly)
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+    }
 
+    // Play the chime first
+    const chime = new Audio("assets/m4a");
+    chime.play().then(() => {
+        // After chime finishes, trigger speech
         const alertMessage = `Attention! A new client has logged in for the ${section} section. Concerned Official: ${personnel}! Concerned Official: ${personnel}! Please attend to the client immediately.`;
-        
+
         const utterance = new SpeechSynthesisUtterance(alertMessage);
-        utterance.volume = 1; 
-        utterance.rate = 1;   
-        
+        utterance.volume = 1;
+        utterance.rate = 1;
+
         const voices = window.speechSynthesis.getVoices();
         const preferredVoice = voices.find(voice => voice.name.includes('Google') && voice.lang.includes('en'));
 
@@ -391,7 +433,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         window.speechSynthesis.speak(utterance);
-    }
+    }).catch(err => {
+        console.error("Error playing chime:", err);
+    });
+}
+
     // ------------------------------------
     
     // --- SweetAlert Notification Function ---
@@ -406,12 +452,12 @@ document.addEventListener('DOMContentLoaded', () => {
             html: `
                 <div style="text-align: left;">
                     <strong>Client:</strong> ${clientName} <br>
-                    <strong>Section:</strong> ${client.section || 'N/A'} <br>
-                    <strong>Official:</strong> ${client.personnel || 'N/A'}
+                    <strong>Concerned Section:</strong> ${client.section || 'N/A'} <br>
+                    <strong>Concerned Official:</strong> ${client.personnel || 'N/A'}
                 </div>
             `,
             showConfirmButton: false,
-            timer: 30000, // Disappears after 30 seconds
+            timer: 60000, // Disappears after 60 seconds
             timerProgressBar: true
         });
     }
@@ -766,11 +812,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- END: HOURLY TIME ANNOUNCEMENT LOGIC ---
 
 
-    // Splash Screen (Retained)
+    // Splash Screen (Fixed to hide non-destructively)
     setTimeout(() => {
-        splashIntro.style.opacity = '0';
-        setTimeout(() => splashIntro.remove(), 500);
-    }, 1500);
+        // Start the fade out
+        splashIntro.style.opacity = '0'; 
+        
+        // After fade out, add the 'hidden' class to fully hide it (visibility: hidden)
+        setTimeout(() => {
+            splashIntro.classList.add('hidden');
+        }, 500); // Matches the CSS transition duration
+    }, 1500); // 1.5 seconds display time
 });
 </script>
 </body>
