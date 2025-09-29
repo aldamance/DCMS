@@ -401,28 +401,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Date formatting options (for re-use)
     const dateOptions = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true };
 
-// --- Audio Alert Function to say official's name twice with chime ---
-function speakNewClientAlert(section, personnel) {
-    if (!('speechSynthesis' in window)) {
-        console.warn("Speech Synthesis not supported for client alerts.");
-        return;
-    }
+    // --- Audio Alert Function to say official's name twice (FIXED) ---
+    function speakNewClientAlert(section, personnel) {
+        if (!('speechSynthesis' in window)) {
+            console.warn("Speech Synthesis not supported for client alerts.");
+            return;
+        }
 
-    // Cancel ongoing speech (so chime + alert won't overlap incorrectly)
-    if (window.speechSynthesis.speaking) {
-        window.speechSynthesis.cancel();
-    }
+        // 💡 FIX: Cancel any ongoing speech (like the hourly time announcement) to prioritize this alert
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
 
-    // Play the chime first
-    const chime = new Audio("assets/m4a");
-    chime.play().then(() => {
-        // After chime finishes, trigger speech
         const alertMessage = `Attention! A new client has logged in for the ${section} section. Concerned Official: ${personnel}! Concerned Official: ${personnel}! Please attend to the client immediately.`;
-
+        
         const utterance = new SpeechSynthesisUtterance(alertMessage);
-        utterance.volume = 1;
-        utterance.rate = 1;
-
+        utterance.volume = 1; 
+        utterance.rate = 1;   
+        
         const voices = window.speechSynthesis.getVoices();
         const preferredVoice = voices.find(voice => voice.name.includes('Google') && voice.lang.includes('en'));
 
@@ -433,11 +429,7 @@ function speakNewClientAlert(section, personnel) {
         }
 
         window.speechSynthesis.speak(utterance);
-    }).catch(err => {
-        console.error("Error playing chime:", err);
-    });
-}
-
+    }
     // ------------------------------------
     
     // --- SweetAlert Notification Function ---
