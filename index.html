@@ -145,6 +145,35 @@
         cursor: wait;
     }
 
+    /* NEW: Style for Radio Button Groups */
+    .radio-group{
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-top: 4px;
+        font-size: 14px; 
+    }
+    .radio-group input[type="radio"] {
+        width: auto; 
+        margin-right: 5px;
+        cursor: pointer;
+        padding: 0;
+        border: none;
+        background: none;
+    }
+    .radio-group label{
+        display: inline; 
+        font-weight: normal; 
+        color: #0f172a; 
+        cursor: pointer;
+    }
+    .radio-group input[type="radio"]:focus + label {
+        outline: 2px solid var(--green-700);
+        outline-offset: 2px;
+        border-radius: 4px;
+    }
+
+
     /* --- Table Styles for Modernization --- */
     #clientListContainer { overflow-x: auto; }
     table{width:100%;border-collapse:collapse;margin-top:12px;min-width: 700px;} 
@@ -200,6 +229,11 @@
       
       /* Table */
       table{min-width: unset;} /* Allow table to shrink on mobile */
+      
+      /* Radio Group on Mobile */
+      .radio-group{
+          gap: 10px;
+      }
     }
 
     /* Splash Screen */
@@ -300,6 +334,31 @@
           </div>
           <div><label>Age</label><input name="age" type="number" min="1" max="150" required placeholder="e.g. 35" title="Please enter your Age"/></div>
           <div><label>Mobile Number</label><input name="mobile" type="tel" pattern="09[0-9]{9}" placeholder="e.g. 09123456789" title="Please enter your 11-digit mobile number."/></div>
+          
+          <div>
+            <label>Sex</label>
+            <div class="radio-group">
+                <input type="radio" id="sexMale" name="sex" value="MALE" required><label for="sexMale">MALE</label>
+                <input type="radio" id="sexFemale" name="sex" value="FEMALE" required><label for="sexFemale">FEMALE</label>
+            </div>
+          </div>
+          
+          <div>
+            <label>Are you PWD (Persons with Disability)?</label>
+            <div class="radio-group">
+                <input type="radio" id="pwdYes" name="pwd" value="YES" required><label for="pwdYes">YES</label>
+                <input type="radio" id="pwdNo" name="pwd" value="NO" required checked><label for="pwdNo">NO</label>
+            </div>
+          </div>
+
+          <div id="pregnant-status-group" style="display: none;">
+            <label>Are you a Pregnant Woman?</label>
+            <div class="radio-group">
+                <input type="radio" id="pregnantYes" name="pregnant" value="YES"><label for="pregnantYes">YES</label>
+                <input type="radio" id="pregnantNo" name="pregnant" value="NO" checked><label for="pregnantNo">NO</label>
+            </div>
+          </div>
+
           <div class="full">
             <label>Address</label>
             <div class="address-group">
@@ -344,13 +403,13 @@
   </div>
 
   <div class="developed-by">
-    Developed by <br><strong>ALDRIN N. DAMANCE, LPT <br>IT TECHNICAL SUPPORT STAFF</strong>
+    Developed by <br><strong>ALDRIN N. DAMANCE, LPT <br>IT SUPPORT STAFF</strong>
   </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // Replace this with your deployed Web App URL
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycby4gdcxwVmcfUERW0FDEqiFNu0mcGUXiMONI8uNRhdh44MH5bj8f7UIyUh-zl_vqqSvWw/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbw4LcrBr23IwOpC5bHF_uLzJKg7QqTGLh51L2VlEuedxv6qdi_opEZMkqO9tZgtPIvEKw/exec';
     
     let allClients = [];
     let allProvinces = [];
@@ -381,6 +440,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const realtimeDatetime = document.getElementById('realtime-datetime');
     const splashIntro = document.getElementById('splash-intro');
     const searchInput = document.getElementById('search-input'); 
+
+    // UPDATED: Sex Element References
+    const sexRadios = document.querySelectorAll('input[name="sex"]');
+    const pregnantStatusGroup = document.getElementById('pregnant-status-group');
+    const pregnantRadios = document.querySelectorAll('input[name="pregnant"]');
+
 
     const PROVINCE_API_URL = 'https://psgc.gitlab.io/api/provinces.json';
     const MUNICIPALITY_API_URL = (provinceCode) => `https://psgc.gitlab.io/api/provinces/${provinceCode}/cities-municipalities.json`;
@@ -487,6 +552,31 @@ document.addEventListener('DOMContentLoaded', () => {
     
     populateProvinces();
     populatePersonnel();
+
+    // UPDATED: Sex and Pregnancy Conditional Logic
+    sexRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const isFemale = e.target.value === 'FEMALE';
+            pregnantStatusGroup.style.display = isFemale ? 'block' : 'none';
+
+            // When FEMALE is selected, make the 'pregnant' field required
+            pregnantRadios.forEach(pradio => {
+                pradio.required = isFemale;
+            });
+            
+            // When MALE is selected, ensure the 'NO' option is checked and no selection is required
+            if (!isFemale) {
+                document.getElementById('pregnantNo').checked = true;
+                document.getElementById('pregnantYes').checked = false;
+            } else {
+                // When FEMALE is selected, ensure 'NO' is checked by default
+                document.getElementById('pregnantNo').checked = true;
+                document.getElementById('pregnantYes').checked = false;
+            }
+        });
+    });
+    // --- END: Sex and Pregnancy Conditional Logic ---
+
 
     // --- NEW: Function to speak the success message ---
     function speakLoginSuccess() {
@@ -764,6 +854,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td colspan="6">
                     <div class="detail-content">
                         <strong>Full Address:</strong> ${r.address || 'N/A'} <br>
+                        <strong>Sex:</strong> ${r.sex || 'N/A'} &bull; 
+                        <strong>PWD:</strong> ${r.pwd || 'N/A'} ${r.sex === 'FEMALE' ? `&bull; <strong>Pregnant:</strong> ${r.pregnant || 'N/A'}` : ''} <br>
                         <strong>Full Purpose:</strong> ${r.purpose || 'N/A'} <br>
                         <strong>Age:</strong> ${r.age || 'N/A'} &bull; 
                         <strong>Mobile:</strong> ${r.mobile || 'N/A'}
