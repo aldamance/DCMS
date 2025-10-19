@@ -320,6 +320,7 @@
         </div>
         <div class="row">
           <button id="syncBtn" class="secondary">Sync List</button>
+          <button id="testChimeBtn">🔊 Test Hourly Chime</button>
         </div>
       </div>
 
@@ -921,53 +922,78 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- START: HOURLY TIME ANNOUNCEMENT LOGIC ---
 
-    let lastAnnouncedHour = null; 
+// 🔊 1. GLOBAL VARIABLES
+const chime = new Audio('assets/chime.m4a');
+let lastAnnouncedHour = -1;
 
-    function speakTime(hour) {
-        const timeString = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-        const textToSpeak = `Attention, the current time is ${timeString}.`;
-        
-        if ('speechSynthesis' in window) {
-            // Cancel current speech if it's the login message interrupting
-            if (window.speechSynthesis.speaking) {
-                window.speechSynthesis.cancel();
-            }
+// 🖱️ Unlock audio after first interaction
+document.addEventListener('click', () => {
+    chime.play().then(() => chime.pause()).catch(() => {});
+}, { once: true });
 
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.volume = 1; 
-            utterance.rate = 1;   
-            
-            const voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(voice => voice.name.includes('Google') && voice.lang.includes('en'));
+// 🗣️ Function to speak the current time
+function speakTime(hour) {
+    const synth = window.speechSynthesis;
 
-            if (preferredVoice) {
-                 utterance.voice = preferredVoice;
-            } else if (voices.length > 0) {
-                 utterance.voice = voices[0];
-            }
+    // Convert 24-hour to 12-hour time
+    const period = hour >= 12 ? 'P.M.' : 'A.M.';
+    const hour12 = hour % 12 || 12;
 
-            window.speechSynthesis.speak(utterance);
-        } else {
-            console.warn("Speech Synthesis not supported in this browser.");
+    const message = `The time is now ${hour12} ${period}.`;
+    console.log("🗣️ Speaking:", message);
+
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.lang = 'en-US';
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    synth.speak(utterance);
+}
+
+// ▶️ Function to play chime then speak
+function playChimeAndSpeak() {
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    chime.currentTime = 0;
+    chime.play()
+        .then(() => console.log("🔔 Chime started playing..."))
+        .catch(error => {
+            console.warn("⚠️ Could not play chime:", error);
+            speakTime(currentHour);
+        });
+
+    chime.onended = () => {
+        console.log("🎵 Chime ended. Speaking time...");
+        speakTime(currentHour);
+    };
+}
+
+// ⏰ Automatic hourly announcement
+function setupHourlyAnnouncements() {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentSecond = now.getSeconds();
+
+    if (currentHour !== lastAnnouncedHour && currentMinute === 0 && currentSecond < 5) {
+        if (!window.speechSynthesis.speaking) {
+            playChimeAndSpeak();
+            lastAnnouncedHour = currentHour;
         }
     }
 
-    function setupHourlyAnnouncements() {
-        const now = new Date();
-        const currentHour = now.getHours();
-        
-        if (currentHour !== lastAnnouncedHour) {
-            if (now.getMinutes() === 0 && now.getSeconds() < 60) {
-                speakTime(currentHour);
-                lastAnnouncedHour = currentHour; 
-            }
-        }
+    setTimeout(setupHourlyAnnouncements, 1000);
+}
 
-        setTimeout(setupHourlyAnnouncements, 1000); 
-    }
-    
-    setupHourlyAnnouncements();
+// 🎛️ Manual test button
+document.getElementById("testChimeBtn").addEventListener("click", () => {
+    playChimeAndSpeak();
+});
 
+// ▶️ Start automatic loop
+setupHourlyAnnouncements();
     // --- END: HOURLY TIME ANNOUNCEMENT LOGIC ---
 
 
