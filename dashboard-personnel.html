@@ -540,10 +540,18 @@
             <div>Reports</div>
         </div>
         <br>
-                <a href="index.html" class="nav-item" style="text-decoration: none; color: inherit;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <div>Logging Form</div>
-        </a>
+  <a href="index.html" 
+     class="nav-item" 
+     style="text-decoration: none; color: inherit; cursor: pointer;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" 
+        stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+    </svg>
+    <div>Client Logging Kiosk</div>
+  </a>
         </nav>
 
       <div style="margin-top:auto;font-size:12px;opacity:.95" id="statusContainer">
@@ -572,7 +580,7 @@
         <div class="row">
           <div id="realtime-datetime" style="margin-bottom: 0;"></div>
           <button id="syncBtn" class="secondary">Sync List</button>
-        <button id="testChimeBtn">🔊 Test Hourly Chime</button>
+        <button id="testChimeBtn">🔊 Time Check</button>
         </div>
       </div>
 
@@ -730,11 +738,26 @@
     Developed by <br><strong>ALDRIN N. DAMANCE, LPT <br>IT SUPPORT STAFF</strong>
   </div>
 
-
+  <script src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk@latest/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle.js"></script>
 <script>
+    
 document.addEventListener('DOMContentLoaded', () => {
     const scrollClientListBtn = document.getElementById('nav-scroll-client-list');
 const targetSection = document.getElementById('view-client-list');
+
+// Azure Text-to-Speech (TTS) Configuration
+const SPEECH_KEY = 'DcmqXhckAOWZHReeu8oIHIgTDYZAEVbFklwdeWeOqNFoBs74Au6MJQQJ99BJACqBBLyXJ3w3AAAYACOGXuAq';
+const SPEECH_REGION = 'southeastasia'; // Corresponds to the URL base: southeastasia.api.cognitive.microsoft.com
+
+// 1. Configure the Speech Service globally
+const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(SPEECH_KEY, SPEECH_REGION);
+
+// 2. Set the desired voice.
+// 'en-US-JennyNeural' is a high-quality, professional English-US voice.
+// You can change this to a regional voice, e.g., 'en-PH-RosaNeural' for English (Philippines), if preferred.
+speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural";
+
+// NOTE: The AudioConfig is optional for playing to the default speaker (browser audio out)
 
 scrollClientListBtn.addEventListener('click', () => {
     // 1. First, ensure the 'Client List' view is the active view
@@ -850,12 +873,31 @@ initSpeechBtn.addEventListener('click', initializeSpeech);
     
 // --- Audio Alert Function to say official's name twice (FIXED AND REINFORCED) ---
 // --- Audio Alert with Pre- and Post-Speech Chimes ---
+/**
+
+ /**
+ * Uses Microsoft Azure's Text-to-Speech service to speak the new client alert.
+ * This version uses a single chime that plays BEFORE the voice alert.
+ * 
+ * NOTE: Requires the Azure Speech SDK and a global `speechConfig` object
+ * properly configured with your subscription key and region.
+ * 
+ * @param {string} section - The client's concerned section/office.
+ * @param {string} personnel - The concerned official's name.
+ * @param {string} pwdStatus - 'Yes' or 'No' for PWD status.
+ * @param {string} pregnantStatus - 'Yes' or 'No' for pregnant status.
+ * @param {string} sex - The client's sex.
+ * @param {string} age - The client's age (string, will be parsed to integer).
+ */
 function speakNewClientAlert(section, personnel, pwdStatus, pregnantStatus, sex, age) {
-    // 1. Check if supported
-    if (!('speechSynthesis' in window)) {
-        console.warn("Speech Synthesis not supported.");
+    if (typeof SpeechSDK === 'undefined') {
+        console.error("Azure Speech SDK (SpeechSDK) is not loaded or configured.");
         return;
     }
+
+    // ✅ Configure Filipino English voice
+    speechConfig.speechSynthesisLanguage = "en-PH";
+    speechConfig.speechSynthesisVoiceName = "en-PH-RosaNeural";
 
     // --- PRIORITY LOGIC ---
     const clientAge = parseInt(age, 10);
@@ -889,72 +931,47 @@ function speakNewClientAlert(section, personnel, pwdStatus, pregnantStatus, sex,
 
     // --- ALERT MESSAGE ---
     const alertMessage =
-        `Attention! A new client has logged in for the ${section} section. `
+        `Attention! A new client has logged in for the ${section}. `
         + priorityText
         + `Concerned official: ${personnel}. `
         + `Concerned official: ${personnel}. `
         + `Please attend to the client immediately.`;
 
-    // --- CHIME PATHS ---
-    const chimeBefore = new Audio("assets/chime.m4a"); // 🔔 short alert before
-    const chimeAfter = new Audio("assets/chime.m4a");  // 🔔 reuse same file after
+    // --- CHIME PATH ---
+    const chimeBefore = new Audio("assets/chime.m4a");
     chimeBefore.volume = 1;
-    chimeAfter.volume = 1;
 
-    // --- SPEECH FUNCTION ---
-    const startSpeech = (text) => {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.volume = 1;
-        utterance.rate = 0.95;
-        utterance.pitch = 1;
+    // --- FUNCTION: Azure Speech ---
+    const startAzureSpeech = (text) => {
+        const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig);
 
-        // Pick best English voice
-        const pickVoice = () => {
-            const voices = window.speechSynthesis.getVoices();
-            return (
-                voices.find(v => v.name.includes("Google") && v.lang.startsWith("en")) ||
-                voices.find(v => v.lang.startsWith("en")) ||
-                voices[0]
-            );
-        };
-
-        const assignVoiceAndSpeak = () => {
-            const chosenVoice = pickVoice();
-            if (chosenVoice) utterance.voice = chosenVoice;
-
-            // Cancel any current speech before starting
-            if (window.speechSynthesis.speaking) {
-                window.speechSynthesis.cancel();
-                setTimeout(() => window.speechSynthesis.speak(utterance), 250);
-            } else {
-                window.speechSynthesis.speak(utterance);
+        synthesizer.speakTextAsync(
+            text,
+            function (result) {
+                if (result.reason !== SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+                    console.error("Azure Speech synthesis failed or cancelled:", result.errorDetails);
+                }
+                synthesizer.close();
+            },
+            function (error) {
+                console.trace("Azure Speech Error:", error);
+                synthesizer.close();
             }
-
-            // 🔔 Play chime after speaking finishes
-            utterance.onend = () => {
-                setTimeout(() => {
-                    chimeAfter.play().catch(err => console.warn("Post-chime play failed:", err));
-                }, 200); // small gap for natural pause
-            };
-        };
-
-        if (speechSynthesis.getVoices().length === 0) {
-            speechSynthesis.onvoiceschanged = assignVoiceAndSpeak;
-        } else {
-            assignVoiceAndSpeak();
-        }
+        );
     };
 
-    // --- SEQUENCE EXECUTION ---
-    // 1. Play chime → 2. Speak → 3. Play chime again
-    chimeBefore.onended = () => startSpeech(alertMessage);
+    // --- SEQUENCE: Play pre-chime → speech ---
+    chimeBefore.onended = () => {
+        chimeBefore.onended = null;
+        startAzureSpeech(alertMessage);
+    };
+
     chimeBefore.play().catch(err => {
-        console.warn("Pre-chime play failed:", err);
-        startSpeech(alertMessage); // fallback if autoplay blocked
+        console.warn("Pre-chime play failed (autoplay blocked?):", err);
+        startAzureSpeech(alertMessage); // fallback
     });
 }
 
-// ------------------------------------
     
 
 // --- NEW HELPER FUNCTION: Generates HTML for Priority Status ---
@@ -1505,55 +1522,66 @@ document.head.appendChild(style);
         }
     }
 
-// 🔊 1. GLOBAL VARIABLES
+// 🔊 GLOBAL VARIABLES
 const chime = new Audio('assets/chime.m4a');
 let lastAnnouncedHour = -1;
+let isSpeaking = false;
 
-// 🖱️ Unlock audio after first interaction
+// 🖱️ Unlock audio after first interaction (browser requirement)
 document.addEventListener('click', () => {
     chime.play().then(() => chime.pause()).catch(() => {});
 }, { once: true });
 
-// 🗣️ Function to speak the current time
-function speakTime(hour) {
-    const synth = window.speechSynthesis;
+// 🗣️ Speak the current time
+function speakTime() {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
 
-    // Convert 24-hour to 12-hour time
-    const period = hour >= 12 ? 'P.M.' : 'A.M.';
-    const hour12 = hour % 12 || 12;
-
-    const message = `The time is now ${hour12} ${period}.`;
+    const message = `Attention! The time is now ${hours}:${formattedMinutes} ${ampm}.`;
     console.log("🗣️ Speaking:", message);
 
-    const utterance = new SpeechSynthesisUtterance(message);
-    utterance.lang = 'en-US';
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    utterance.volume = 1;
+    const utter = new SpeechSynthesisUtterance(message);
+    utter.lang = 'en-US';   // English (default)
+    utter.rate = 1;         // Normal speed
+    utter.pitch = 1;        // Normal tone
+    utter.volume = 1;       // Full volume
 
-    synth.speak(utterance);
+    utter.onstart = () => { isSpeaking = true; };
+    utter.onend = () => {
+        console.log("✅ Finished speaking.");
+        isSpeaking = false;
+    };
+
+    window.speechSynthesis.speak(utter);
 }
 
-// ▶️ Function to play chime then speak
+// 🔔 Play chime then speak (no overlap)
 function playChimeAndSpeak() {
-    const now = new Date();
-    const currentHour = now.getHours();
+    if (isSpeaking || window.speechSynthesis.speaking) {
+        console.warn("⏸️ Still speaking — skipping overlap.");
+        return;
+    }
 
     chime.currentTime = 0;
+    console.log("🔔 Playing chime...");
     chime.play()
-        .then(() => console.log("🔔 Chime started playing..."))
-        .catch(error => {
-            console.warn("⚠️ Could not play chime:", error);
-            speakTime(currentHour);
+        .then(() => {
+            chime.onended = () => {
+                console.log("🎵 Chime ended. Now speaking...");
+                speakTime();
+            };
+        })
+        .catch(err => {
+            console.warn("⚠️ Chime play error:", err);
+            speakTime(); // fallback if chime fails
         });
-
-    chime.onended = () => {
-        console.log("🎵 Chime ended. Speaking time...");
-        speakTime(currentHour);
-    };
 }
 
-// ⏰ Automatic hourly announcement
+// ⏰ Automatic hourly announcements
 function setupHourlyAnnouncements() {
     const now = new Date();
     const currentHour = now.getHours();
@@ -1561,7 +1589,7 @@ function setupHourlyAnnouncements() {
     const currentSecond = now.getSeconds();
 
     if (currentHour !== lastAnnouncedHour && currentMinute === 0 && currentSecond < 5) {
-        if (!window.speechSynthesis.speaking) {
+        if (!window.speechSynthesis.speaking && !isSpeaking) {
             playChimeAndSpeak();
             lastAnnouncedHour = currentHour;
         }
@@ -1575,8 +1603,12 @@ document.getElementById("testChimeBtn").addEventListener("click", () => {
     playChimeAndSpeak();
 });
 
-// ▶️ Start automatic loop
+// ▶️ Start loop
 setupHourlyAnnouncements();
+
+// Load voices (optional, ensures voices ready)
+speechSynthesis.onvoiceschanged = () => {};
+
 
 
 
@@ -1817,7 +1849,7 @@ function renderClients(rows) {
     });
     
     
-    // Function to generate the full printable HTML report
+// Function to generate the full printable HTML report
 function generateReportHTML(stats, clients, reportTitle) {
     const clientTableRows = clients.map(client => {
         let reportDate;
@@ -1865,10 +1897,23 @@ function generateReportHTML(stats, clients, reportTitle) {
             <title>Monthly Client Report - ${reportTitle}</title>
             <style>
                 body {
+                    /* Remove initial margin to rely completely on print margins */
                     font-family: "Arial", sans-serif;
-                    margin: 25px;
+                    margin: 0; 
+                    padding: 0;
                     font-size: 12px;
                     color: #000;
+                }
+                
+                /* Add padding back to the main content area */
+                body > table:first-of-type, body > .report-title, body > .summary, body > table:last-of-type, body > p {
+                    padding-left: 10px;
+                    padding-right: 10px;
+                }
+                
+                .signature-line {
+                    margin-top: 50px;
+                    font-size: 13px;
                 }
 
                 .header-table {
@@ -1945,10 +1990,10 @@ function generateReportHTML(stats, clients, reportTitle) {
                     background-color: #fafafa;
                 }
 
-                /* Force LANDSCAPE printing */
+                /* Force LANDSCAPE printing with MINIMUM (0) margin */
                 @page {
                     size: A4 landscape;
-                    margin: 15mm;
+                    margin: 0; 
                 }
 
                 @media print {
@@ -1983,6 +2028,8 @@ function generateReportHTML(stats, clients, reportTitle) {
             <div class="summary">
                 <h4>MONTHLY SUMMARY</h4>
                 <p><strong>Total Number of Clients:</strong> ${stats.monthlyCount}</p>
+                <p><strong>Male Clients:</strong> ${stats.maleCount || 0}</p>
+                <p><strong>Female Clients:</strong> ${stats.femaleCount || 0}</p>
                 <p><strong>PWD Clients:</strong> ${stats.pwdCount}</p>
                 <p><strong>Senior Citizen Clients (Age ≥ 60):</strong> ${stats.seniorCount}</p>
                 <p><strong>Pregnant Woman Clients:</strong> ${stats.pregnantCount}</p>
@@ -2009,11 +2056,13 @@ function generateReportHTML(stats, clients, reportTitle) {
                     ${clientTableRows || `<tr><td colspan="11" style="text-align:center;">No records found for this month.</td></tr>`}
                 </tbody>
             </table>
+            <p class="signature-line">
+                Prepared by: _______________________________
+            </p>
         </body>
         </html>
     `;
 }
-
 
     
     // --- END: REPORTS MODAL AND GENERATION LOGIC ---
