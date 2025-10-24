@@ -267,6 +267,7 @@
         box-shadow: none;
         background: rgba(11,97,55,0.02); /* Very light background for disabled secondary */
     }
+
   </style>
 </head>
 <body>
@@ -442,51 +443,72 @@
       </div>
 
       <section id="view-client-form" class="card fade-in">
-        <div id="realtime-datetime"></div>
-        <h3>Client Logging Kiosk</h3>
-        <form id="clientForm">
-          <div class="name-group">
-            <div><label>First Name</label><input name="firstName" type="text" oninput="this.value = this.value.toUpperCase()" required placeholder="e.g. JUAN" title="Please enter your First Name"/></div>
-            <div><label>Middle Name</label><input name="middleName" type="text" oninput="this.value = this.value.toUpperCase()" placeholder="" title="Please enter your Middle Initial or Middle Name"/></div>
-            <div><label>Last Name</label><input name="lastName" type="text" oninput="this.value = this.value.toUpperCase()" required placeholder="e.g. DELA CRUZ" title="Please enter your Last Name"/></div>
-          </div>
-          <div><label>Age</label><input name="age" type="number" min="1" max="150" required placeholder="e.g. 35" title="Please enter your Age"/></div>
-          <div><label>Mobile Number</label><input name="mobile" type="tel" pattern="09[0-9]{9}" placeholder="e.g. 09123456789" title="Please enter your 11-digit mobile number."/></div>
-          
-          <div>
-            <label>Sex</label>
-            <div class="radio-group">
-                <input type="radio" id="sexMale" name="sex" value="MALE" required><label for="sexMale">MALE</label>
-                <input type="radio" id="sexFemale" name="sex" value="FEMALE" required><label for="sexFemale">FEMALE</label>
-            </div>
-          </div>
-          
-          <div>
-            <label>Are you PWD (Persons with Disability)?</label>
-            <div class="radio-group">
-                <input type="radio" id="pwdYes" name="pwd" value="YES" required><label for="pwdYes">YES</label>
-                <input type="radio" id="pwdNo" name="pwd" value="NO" required checked><label for="pwdNo">NO</label>
-            </div>
-          </div>
+  <div id="realtime-datetime"></div>
+  <h3>Client Logging Kiosk</h3>
+  <form id="clientForm">
+    <div class="name-group">
+      <div>
+        <label>First Name</label>
+        <input name="firstName" type="text" required placeholder="e.g. JUAN" title="Please enter your First Name"/>
+      </div>
+      <div>
+        <label>Middle Name</label>
+        <input name="middleName" type="text" placeholder="" title="Please enter your Middle Initial or Middle Name"/>
+      </div>
+      <div>
+        <label>Last Name</label>
+        <input name="lastName" type="text" required placeholder="e.g. DELA CRUZ" title="Please enter your Last Name"/>
+      </div>
+    </div>
 
-          <div id="pregnant-status-group" style="display: none;">
-            <label>Are you a Pregnant Woman?</label>
-            <div class="radio-group">
-                <input type="radio" id="pregnantYes" name="pregnant" value="YES"><label for="pregnantYes">YES</label>
-                <input type="radio" id="pregnantNo" name="pregnant" value="NO" checked><label for="pregnantNo">NO</label>
-            </div>
-          </div>
+    <div>
+      <label>Age</label>
+      <input name="age" type="number" min="1" max="150" required placeholder="e.g. 35" title="Please enter your Age"/>
+    </div>
 
-          <div class="full">
-            <label>Address</label>
-            <div class="address-group">
-              <div><label style="font-size: 11px; margin-top: 0">Province</label><select name="province" required></select></div>
-              <div><label style="font-size: 11px; margin-top: 0">Municipality</label><select name="municipality" required></select></div>
-              <div><label style="font-size: 11px; margin-top: 0">Barangay</label><select name="barangay" required></select></div>
-              <div><label style="font-size: 11px; margin-top: 0">Purok / Zone</label><input name="purokZone" type="text" oninput="this.value = this.value.toUpperCase()" placeholder="e.g. ZONE 1" title="Please enter your Purok or Zone"/></div>
-            </div>
-          </div>
-          <div class="full"><label>Purpose</label><textarea name="purpose" required oninput="this.value = this.value.toUpperCase()" placeholder="e.g. FOR CENSUS DATA" title="Please state your Purpose of visit"></textarea></div>
+    <div>
+      <label>Mobile Number</label>
+      <input name="mobile" type="tel" pattern="09[0-9]{9}" placeholder="e.g. 09123456789" title="Please enter your 11-digit mobile number."/>
+    </div>
+
+    <div>
+      <label>Sex</label>
+      <div class="radio-group">
+        <input type="radio" id="sexMale" name="sex" value="MALE" required><label for="sexMale">MALE</label>
+        <input type="radio" id="sexFemale" name="sex" value="FEMALE" required><label for="sexFemale">FEMALE</label>
+      </div>
+    </div>
+
+    <div>
+      <label>Are you PWD (Persons with Disability)?</label>
+      <div class="radio-group">
+        <input type="radio" id="pwdYes" name="pwd" value="YES" required><label for="pwdYes">YES</label>
+        <input type="radio" id="pwdNo" name="pwd" value="NO" required checked><label for="pwdNo">NO</label>
+      </div>
+    </div>
+
+    <div id="pregnant-status-group" style="display: none;">
+      <label>Are you a Pregnant Woman?</label>
+      <div class="radio-group">
+        <input type="radio" id="pregnantYes" name="pregnant" value="YES"><label for="pregnantYes">YES</label>
+        <input type="radio" id="pregnantNo" name="pregnant" value="NO" checked><label for="pregnantNo">NO</label>
+      </div>
+    </div>
+
+    <div class="full">
+      <label>Address</label>
+      <div class="address-group">
+        <div><label style="font-size: 11px; margin-top: 0">Province</label><select name="province" required></select></div>
+        <div><label style="font-size: 11px; margin-top: 0">Municipality</label><select name="municipality" required></select></div>
+        <div><label style="font-size: 11px; margin-top: 0">Barangay</label><select name="barangay" required></select></div>
+        <div><label style="font-size: 11px; margin-top: 0">Purok / Zone</label><input name="purokZone" type="text" placeholder="e.g. ZONE 1" title="Please enter your Purok or Zone"/></div>
+      </div>
+    </div>
+
+    <div class="full">
+      <label>Purpose</label>
+      <textarea name="purpose" required placeholder="e.g. FOR CENSUS DATA" title="Please state your Purpose of visit"></textarea>
+    </div>
           <div><label>Section / Unit Concerned</label>
             <select name="section" required>
               <option value="">-- Select Section / Unit Concerned --</option>
@@ -1119,6 +1141,28 @@ setupHourlyAnnouncements();
         setTimeout(() => splashIntro.remove(), 500);
     }, 1500);
 });
+
+// 🔠 Auto-uppercase all text inputs and textareas
+document.addEventListener('input', (event) => {
+  const el = event.target;
+
+  // Only apply to text-like fields
+  if (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'search' || el.type === 'tel')) {
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    el.value = el.value.toUpperCase();
+    // keep cursor in place
+    el.setSelectionRange(start, end);
+  }
+
+  if (el.tagName === 'TEXTAREA') {
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    el.value = el.value.toUpperCase();
+    el.setSelectionRange(start, end);
+  }
+});
+
 </script>
 </body>
 
