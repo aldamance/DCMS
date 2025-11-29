@@ -468,7 +468,7 @@
 
     <div>
       <label>Mobile Number</label>
-      <input name="mobile" type="tel" pattern="09[0-9]{9}" placeholder="e.g. 09123456789" title="Please enter your 11-digit mobile number."/>
+      <input name="mobile" type="tel" inputmode="numeric" pattern="09[0-9]{9}" placeholder="e.g. 09123456789" title="Please enter your 11-digit mobile number."/>
     </div>
 
     <div>
@@ -1146,8 +1146,10 @@ setupHourlyAnnouncements();
 document.addEventListener('input', (event) => {
   const el = event.target;
 
-  // Only apply to text-like fields
-  if (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'search' || el.type === 'tel')) {
+  // Only apply to text-like fields, EXCLUDING 'tel'
+  if (el.tagName === 'INPUT' && 
+      (el.type === 'text' || el.type === 'search') && // Removed || el.type === 'tel'
+      el.name !== 'mobile') { // Added an extra check just in case, though type exclusion should suffice
     const start = el.selectionStart;
     const end = el.selectionEnd;
     el.value = el.value.toUpperCase();

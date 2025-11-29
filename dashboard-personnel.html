@@ -737,69 +737,15 @@
       <div class="developed-by">
     Developed by <br><strong>ALDRIN N. DAMANCE, LPT <br>IT SUPPORT STAFF</strong>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk@latest/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle.js"></script>
 <script>
+
+    // Replace this with your deployed Web App URL
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbw4LcrBr23IwOpC5bHF_uLzJKg7QqTGLh51L2VlEuedxv6qdi_opEZMkqO9tZgtPIvEKw/exec';
+    
     
 document.addEventListener('DOMContentLoaded', () => {
     const scrollClientListBtn = document.getElementById('nav-scroll-client-list');
 const targetSection = document.getElementById('view-client-list');
-
-// Azure Text-to-Speech (TTS) Configuration
-const SPEECH_KEY = 'DcmqXhckAOWZHReeu8oIHIgTDYZAEVbFklwdeWeOqNFoBs74Au6MJQQJ99BJACqBBLyXJ3w3AAAYACOGXuAq';
-const SPEECH_REGION = 'southeastasia'; // Corresponds to the URL base: southeastasia.api.cognitive.microsoft.com
-
-// 1. Configure the Speech Service globally
-const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(SPEECH_KEY, SPEECH_REGION);
-
-// 2. Set the desired voice.
-// 'en-US-JennyNeural' is a high-quality, professional English-US voice.
-// You can change this to a regional voice, e.g., 'en-PH-RosaNeural' for English (Philippines), if preferred.
-speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural";
-
-// NOTE: The AudioConfig is optional for playing to the default speaker (browser audio out)
-
-scrollClientListBtn.addEventListener('click', () => {
-    // 1. First, ensure the 'Client List' view is the active view
-    switchView('client-list'); 
-
-    // 2. Scroll the target section into view smoothly
-    if (targetSection) {
-        targetSection.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start' // Aligns the top of the element to the top of the viewport
-        });
-    }
-    
-    // 3. (Mobile Only) Close the sidebar after clicking
-    if (window.innerWidth <= 600) {
-        setTimeout(toggleSidebar, 100); 
-    }
-});
-// --- FIX: User Activation for Speech Synthesis (Anti-Deprecation Fix) ---
-const speechOverlay = document.getElementById('audio-alert-overlay');
-const initSpeechBtn = document.getElementById('initialize-speech-btn');
-
-// Dummy function to perform a user-initiated, silent speech to gain permission
-function initializeSpeech() {
-    // 1. Speak a tiny, silent message to activate the browser's speech API
-    if ('speechSynthesis' in window) {
-        const activationUtterance = new SpeechSynthesisUtterance(" ");
-        activationUtterance.volume = 0; // Keep it silent
-        window.speechSynthesis.speak(activationUtterance);
-    }
-    
-    // 2. Hide the overlay now that activation is complete
-    speechOverlay.style.display = 'none';
-    
-    // 3. Kickstart the hourly announcements, which now have permission to run
-    // setupHourlyAnnouncements(); // Original: Commented out as setupHourlyAnnouncements wasn't fully defined/used in the original script
-}
-
-// Attach the activation function to the button click
-initSpeechBtn.addEventListener('click', initializeSpeech);
-
-// -------------------------------------------------------------------------
 
     // --- New Sidebar Toggle Logic ---
     const menuToggleBtn = document.getElementById('menu-toggle');
@@ -833,8 +779,6 @@ initSpeechBtn.addEventListener('click', initializeSpeech);
     });
     // ------------------------------------
 
-    // Replace this with your deployed Web App URL
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbw4LcrBr23IwOpC5bHF_uLzJKg7QqTGLh51L2VlEuedxv6qdi_opEZMkqO9tZgtPIvEKw/exec';
     
     let allClients = [];
     let initialLoad = true; 
@@ -873,15 +817,46 @@ initSpeechBtn.addEventListener('click', initializeSpeech);
     
 // --- Audio Alert Function to say official's name twice (FIXED AND REINFORCED) ---
 // --- Audio Alert with Pre- and Post-Speech Chimes ---
-/**
 
- /**
- * Uses Microsoft Azure's Text-to-Speech service to speak the new client alert.
+// --- FIX: User Activation for Speech Synthesis (Anti-Deprecation Fix) ---
+const speechOverlay = document.getElementById('audio-alert-overlay');
+const initSpeechBtn = document.getElementById('initialize-speech-btn');
+
+// GLOBAL FLAG: Tracks if the user has activated the audio.
+let speakerReady = false; 
+
+// Dummy function to perform a user-initiated, silent speech to gain permission
+function initializeSpeech() {
+    // 1. Speak a tiny, silent message to activate the browser's speech API
+    if ('speechSynthesis' in window) {
+        const activationUtterance = new SpeechSynthesisUtterance(" ");
+        activationUtterance.volume = 0; // Keep it silent
+        window.speechSynthesis.speak(activationUtterance);
+    }
+    
+    // 2. Set the global flag to true
+    speakerReady = true;
+
+    // 3. Hide the overlay now that activation is complete
+    speechOverlay.style.display = 'none';
+    
+    // 4. Kickstart the automatic client sync
+    // Assuming loadClientList is the function that initiates the periodic data fetch
+    // Call loadClientList(true) to force an immediate, silent check after activation.
+    if (typeof loadClientList === 'function') {
+        loadClientList(true); 
+    }
+}
+
+// Attach the activation function to the button click
+if (initSpeechBtn) {
+    initSpeechBtn.addEventListener('click', initializeSpeech);
+}
+
+// -------------------------------------------------------------------------
+/**
+ * Uses the browser's native Web Speech API (SpeechSynthesis) to speak the new client alert.
  * This version uses a single chime that plays BEFORE the voice alert.
- * 
- * NOTE: Requires the Azure Speech SDK and a global `speechConfig` object
- * properly configured with your subscription key and region.
- * 
  * @param {string} section - The client's concerned section/office.
  * @param {string} personnel - The concerned official's name.
  * @param {string} pwdStatus - 'Yes' or 'No' for PWD status.
@@ -889,89 +864,105 @@ initSpeechBtn.addEventListener('click', initializeSpeech);
  * @param {string} sex - The client's sex.
  * @param {string} age - The client's age (string, will be parsed to integer).
  */
+// ------------------------------
+// Adjustable TTS Settings
+// ------------------------------
+const ttsSettings = {
+    rate: 0.7,       // Speech speed (0.1 - 10)
+    pitch: 1,        // Pitch (0 - 2)
+    volume: 1        // Volume (0 - 1)
+};
+
 function speakNewClientAlert(section, personnel, pwdStatus, pregnantStatus, sex, age) {
-    if (typeof SpeechSDK === 'undefined') {
-        console.error("Azure Speech SDK (SpeechSDK) is not loaded or configured.");
+    if (!window.speechSynthesis) {
+        console.error("Web Speech API is not supported in this browser.");
         return;
     }
 
-    // ✅ Configure Filipino English voice
-    speechConfig.speechSynthesisLanguage = "en-PH";
-    speechConfig.speechSynthesisVoiceName = "en-PH-RosaNeural";
+    if (!speakerReady) {
+        console.log('Audio is not yet activated by user interaction.');
+        speechOverlay.style.display = 'flex'; 
+        return;
+    }
 
     // --- PRIORITY LOGIC ---
     const clientAge = parseInt(age, 10);
-    const isPwd = pwdStatus?.toLowerCase() === 'yes';
-    const isPregnant = pregnantStatus?.toLowerCase() === 'yes' && sex?.toLowerCase() === 'female';
+    const isPwd = pwdStatus?.trim().toLowerCase() === 'yes';
+    const isPregnant = pregnantStatus?.trim().toLowerCase() === 'yes' && sex?.trim().toLowerCase() === 'female';
     const isSenior = !isNaN(clientAge) && clientAge >= 60;
 
     let priorityText = "";
-
-    if (isPwd) {
-        if (isPregnant) {
-            priorityText = "This client is a person with disability and a pregnant woman.";
-        } else if (isSenior) {
-            priorityText = "This client is a senior citizen and a person with disability.";
-        } else {
-            priorityText = "This client is a person with disability.";
-        }
-    } else if (isPregnant) {
-        if (isSenior) {
-            priorityText = "This client is a pregnant woman and a senior citizen.";
-        } else {
-            priorityText = "This client is a pregnant woman.";
-        }
-    } else if (isSenior) {
-        priorityText = "This client is a senior citizen.";
-    }
+    if (isPwd && isPregnant) priorityText = "This client is a person with disability and a pregnant woman.";
+    else if (isPwd && isSenior) priorityText = "This client is a senior citizen and a person with disability.";
+    else if (isPwd) priorityText = "This client is a person with disability.";
+    else if (isPregnant && isSenior) priorityText = "This client is a pregnant woman and a senior citizen.";
+    else if (isPregnant) priorityText = "This client is a pregnant woman.";
+    else if (isSenior) priorityText = "This client is a senior citizen.";
 
     if (priorityText) {
-        priorityText = "Priority alert! " + priorityText + " ";
+        priorityText = `Priority alert! ${priorityText} `;
     }
+
+    // Repeat the concerned official's name for reinforcement
+    const repeatedPersonnel = `${personnel}. ${personnel}.`;
 
     // --- ALERT MESSAGE ---
     const alertMessage =
         `Attention! A new client has logged in for the ${section}. `
         + priorityText
-        + `Concerned official: ${personnel}. `
-        + `Concerned official: ${personnel}. `
+        + `Concerned official: ${repeatedPersonnel} `
         + `Please attend to the client immediately.`;
 
     // --- CHIME PATH ---
     const chimeBefore = new Audio("assets/chime.m4a");
-    chimeBefore.volume = 1;
+    chimeBefore.volume = ttsSettings.volume; // Use volume from settings
 
-    // --- FUNCTION: Azure Speech ---
-    const startAzureSpeech = (text) => {
-        const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig);
+    // --- FUNCTION: Native Web Speech ---
+    const startNativeSpeech = (text) => {
+        const utterance = new SpeechSynthesisUtterance(text);
 
-        synthesizer.speakTextAsync(
-            text,
-            function (result) {
-                if (result.reason !== SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-                    console.error("Azure Speech synthesis failed or cancelled:", result.errorDetails);
-                }
-                synthesizer.close();
-            },
-            function (error) {
-                console.trace("Azure Speech Error:", error);
-                synthesizer.close();
-            }
-        );
+        // Attempt to select "Microsoft Mark – English (United States)"
+        const voices = window.speechSynthesis.getVoices();
+        const markVoice = voices.find(v => v.name === "Microsoft Mark - English (United States)");
+        if (markVoice) utterance.voice = markVoice;
+
+        utterance.lang = markVoice?.lang || 'en-US';
+        utterance.pitch = ttsSettings.pitch;   // Adjustable pitch
+        utterance.rate = ttsSettings.rate;     // Adjustable rate
+        utterance.volume = ttsSettings.volume; // Adjustable volume
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
     };
 
-    // --- SEQUENCE: Play pre-chime → speech ---
-    chimeBefore.onended = () => {
-        chimeBefore.onended = null;
-        startAzureSpeech(alertMessage);
-    };
-
-    chimeBefore.play().catch(err => {
-        console.warn("Pre-chime play failed (autoplay blocked?):", err);
-        startAzureSpeech(alertMessage); // fallback
+    // --- SEQUENCE: Play chime then speak ---
+    chimeBefore.play().then(() => {
+        chimeBefore.onended = () => startNativeSpeech(alertMessage);
+    }).catch(err => {
+        console.warn("Chime failed, speaking immediately:", err);
+        startNativeSpeech(alertMessage);
     });
 }
 
+
+
+scrollClientListBtn.addEventListener('click', () => {
+    // 1. First, ensure the 'Client List' view is the active view
+    switchView('client-list'); 
+
+    // 2. Scroll the target section into view smoothly
+    if (targetSection) {
+        targetSection.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start' // Aligns the top of the element to the top of the viewport
+        });
+    }
+    
+    // 3. (Mobile Only) Close the sidebar after clicking
+    if (window.innerWidth <= 600) {
+        setTimeout(toggleSidebar, 100); 
+    }
+});
     
 
 // --- NEW HELPER FUNCTION: Generates HTML for Priority Status ---
@@ -1526,11 +1517,38 @@ document.head.appendChild(style);
 const chime = new Audio('assets/chime.m4a');
 let lastAnnouncedHour = -1;
 let isSpeaking = false;
+let selectedVoice = null; // Variable to hold the selected voice object
 
 // 🖱️ Unlock audio after first interaction (browser requirement)
 document.addEventListener('click', () => {
+    // Attempt to play and immediately pause the audio to unlock it
     chime.play().then(() => chime.pause()).catch(() => {});
 }, { once: true });
+
+// 🎤 Load voices and set the desired voice
+function loadAndSetVoice() {
+    const voices = window.speechSynthesis.getVoices();
+    const desiredVoiceName = 'Microsoft Mark - English (United States)';
+
+    selectedVoice = voices.find(voice => 
+        voice.name === desiredVoiceName && voice.lang === 'en-US'
+    );
+
+    if (selectedVoice) {
+        console.log("🎤 Selected Voice:", selectedVoice.name);
+    } else {
+        console.warn(`⚠️ Desired voice "${desiredVoiceName}" not found. Using default voice.`);
+    }
+}
+
+// Ensure voices are loaded before checking/setting
+if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    // This event fires when voices are ready
+    window.speechSynthesis.onvoiceschanged = loadAndSetVoice;
+} else {
+    // Fallback/immediate attempt if event isn't supported or needed
+    loadAndSetVoice(); 
+}
 
 // 🗣️ Speak the current time
 function speakTime() {
@@ -1545,10 +1563,17 @@ function speakTime() {
     console.log("🗣️ Speaking:", message);
 
     const utter = new SpeechSynthesisUtterance(message);
-    utter.lang = 'en-US';   // English (default)
-    utter.rate = 1;         // Normal speed
-    utter.pitch = 1;        // Normal tone
-    utter.volume = 1;       // Full volume
+    
+    // Apply settings
+    utter.lang = 'en-US'; 
+    utter.rate = 1; // Normal speed (as requested)
+    utter.pitch = 1; 
+    utter.volume = 1; 
+    
+    // Assign the pre-selected voice
+    if (selectedVoice) {
+        utter.voice = selectedVoice;
+    }
 
     utter.onstart = () => { isSpeaking = true; };
     utter.onend = () => {
@@ -1566,15 +1591,19 @@ function playChimeAndSpeak() {
         return;
     }
 
+    // Reset chime to the beginning
     chime.currentTime = 0;
     console.log("🔔 Playing chime...");
+    
+    // Create a temporary handler for when the chime ends
+    chime.onended = () => {
+        console.log("🎵 Chime ended. Now speaking...");
+        // Ensure the handler is removed after firing if needed, 
+        // though standard browser behavior often handles this for 'onended'
+        speakTime();
+    };
+    
     chime.play()
-        .then(() => {
-            chime.onended = () => {
-                console.log("🎵 Chime ended. Now speaking...");
-                speakTime();
-            };
-        })
         .catch(err => {
             console.warn("⚠️ Chime play error:", err);
             speakTime(); // fallback if chime fails
@@ -1588,6 +1617,7 @@ function setupHourlyAnnouncements() {
     const currentMinute = now.getMinutes();
     const currentSecond = now.getSeconds();
 
+    // Trigger only at the top of the hour (minute 0, seconds 0-4)
     if (currentHour !== lastAnnouncedHour && currentMinute === 0 && currentSecond < 5) {
         if (!window.speechSynthesis.speaking && !isSpeaking) {
             playChimeAndSpeak();
@@ -1595,22 +1625,24 @@ function setupHourlyAnnouncements() {
         }
     }
 
+    // Check again in 1 second
     setTimeout(setupHourlyAnnouncements, 1000);
 }
 
 // 🎛️ Manual test button
-document.getElementById("testChimeBtn").addEventListener("click", () => {
-    playChimeAndSpeak();
-});
+// Assumes you have a button with id="testChimeBtn" in your HTML
+const testButton = document.getElementById("testChimeBtn");
+if (testButton) {
+    testButton.addEventListener("click", () => {
+        playChimeAndSpeak();
+    });
+} else {
+    console.warn("Element with ID 'testChimeBtn' not found. Manual test button disabled.");
+}
 
 // ▶️ Start loop
-setupHourlyAnnouncements();
-
-// Load voices (optional, ensures voices ready)
-speechSynthesis.onvoiceschanged = () => {};
-
-
-
+// Use a small delay to ensure event listeners and voice loading have a moment
+setTimeout(setupHourlyAnnouncements, 500);
 
     // Client List Renderer
 function renderClients(rows) {
@@ -2066,6 +2098,67 @@ function generateReportHTML(stats, clients, reportTitle) {
 
     
     // --- END: REPORTS MODAL AND GENERATION LOGIC ---
+// --- SPEAK ALERT USING MICROSOFT MARK ---
+function speakAlert(message, options = {}) {
+    if (!window.speechSynthesis) {
+        console.error('Web Speech API not supported in this browser.');
+        return;
+    }
+
+    const { rate = 1, pitch = 1, volume = 1 } = options;
+    const utterance = new SpeechSynthesisUtterance(message);
+
+    // Load voices
+    let voices = window.speechSynthesis.getVoices();
+
+    // Handle case where voices are not yet loaded
+    if (!voices.length) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            voices = window.speechSynthesis.getVoices();
+            assignVoiceAndSpeak(voices);
+        };
+    } else {
+        assignVoiceAndSpeak(voices);
+    }
+
+    function assignVoiceAndSpeak(voicesList) {
+        const preferredVoice = voicesList.find(v => v.name.includes('Mark') && v.lang === 'en-US');
+
+        if (preferredVoice) {
+            utterance.voice = preferredVoice;
+            console.log(`Using voice: ${preferredVoice.name} (${preferredVoice.lang})`);
+        } else {
+            console.warn('Microsoft Mark (en-US) not found, using default voice.');
+        }
+
+        utterance.rate = rate;
+        utterance.pitch = pitch;
+        utterance.volume = volume;
+
+        window.speechSynthesis.speak(utterance);
+    }
+}
+
+// Inside your speakAlert or a related function:
+function speakAlert(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Stop anything else speaking
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // --- CHECK THIS LINE ---
+        // Ensure the rate is set to 1.0 (normal speed) or lower.
+        utterance.rate = 1.0; 
+        
+        window.speechSynthesis.speak(utterance);
+    }
+}
+// --- AUTO-CLICK AND SPEAK AFTER 3 SECONDS ---
+document.getElementById('initialize-speech-btn').addEventListener('click', () => {
+    // This is now considered a real user gesture
+    speakAlert('Welcome to DENR-CENRO DIFFUN Client Monitoring Dashboard');
+});
+
 
 });
 </script>
