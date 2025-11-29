@@ -2100,7 +2100,7 @@ function generateReportHTML(stats, clients, reportTitle) {
     // --- END: REPORTS MODAL AND GENERATION LOGIC ---
 // --- SPEAK ALERT USING MICROSOFT MARK ---
 function speakAlert(message, options = {}) {
-    if (!window.speechSynthesis) {
+    if (!('speechSynthesis' in window)) {
         console.error('Web Speech API not supported in this browser.');
         return;
     }
@@ -2108,22 +2108,8 @@ function speakAlert(message, options = {}) {
     const { rate = 1, pitch = 1, volume = 1 } = options;
     const utterance = new SpeechSynthesisUtterance(message);
 
-    // Load voices
-    let voices = window.speechSynthesis.getVoices();
-
-    // Handle case where voices are not yet loaded
-    if (!voices.length) {
-        window.speechSynthesis.onvoiceschanged = () => {
-            voices = window.speechSynthesis.getVoices();
-            assignVoiceAndSpeak(voices);
-        };
-    } else {
-        assignVoiceAndSpeak(voices);
-    }
-
     function assignVoiceAndSpeak(voicesList) {
         const preferredVoice = voicesList.find(v => v.name.includes('Mark') && v.lang === 'en-US');
-
         if (preferredVoice) {
             utterance.voice = preferredVoice;
             console.log(`Using voice: ${preferredVoice.name} (${preferredVoice.lang})`);
@@ -2135,29 +2121,30 @@ function speakAlert(message, options = {}) {
         utterance.pitch = pitch;
         utterance.volume = volume;
 
+        window.speechSynthesis.cancel(); // Stop any ongoing speech
         window.speechSynthesis.speak(utterance);
+    }
+
+    let voices = window.speechSynthesis.getVoices();
+    if (!voices.length) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            voices = window.speechSynthesis.getVoices();
+            assignVoiceAndSpeak(voices);
+        };
+    } else {
+        assignVoiceAndSpeak(voices);
     }
 }
 
-// Inside your speakAlert or a related function:
-function speakAlert(text) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // Stop anything else speaking
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        
-        // --- CHECK THIS LINE ---
-        // Ensure the rate is set to 1.0 (normal speed) or lower.
-        utterance.rate = 1.0; 
-        
-        window.speechSynthesis.speak(utterance);
-    }
-}
-// --- AUTO-CLICK AND SPEAK AFTER 3 SECONDS ---
+// --- USER GESTURE BUTTON ---
 document.getElementById('initialize-speech-btn').addEventListener('click', () => {
-    // This is now considered a real user gesture
-    speakAlert('Welcome to DENR-CENRO DIFFUN Client Monitoring Dashboard');
+    speakAlert('Welcome to DENR-CENRO DIFFUN Client Monitoring Dashboard', {
+        rate: 0.7,
+        pitch: 1.0,
+        volume: 1.0
+    });
 });
+
 
 
 });
